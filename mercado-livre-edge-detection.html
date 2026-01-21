@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mercado Livre Detection - Ganhe Cupom</title>
+    <style>
+        :root {
+            --ml-yellow: #FFD000;
+            --ml-purple: #3D2645;
+            --success-green: #4CAF50;
+            --error-red: #F44336;
+            --warning-orange: #FF9800;
+            --text-dark: #2c3e50;
+            --text-light: #ffffff;
+            --bg-light: #f8f9fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--ml-purple) 0%, #5a3d6b 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-dark);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--ml-yellow);
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--ml-purple);
+        }
+
+        .header h1 {
+            color: var(--ml-purple);
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--ml-purple);
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px 20px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .instructions {
+            background: var(--bg-light);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            color: var(--text-dark);
+            font-size: 14px;
+        }
+
+        .instructions h3 {
+            color: var(--ml-purple);
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--ml-purple);
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-light);
+        }
+
+        .upload-area:hover {
+            background: rgba(255, 208, 0, 0.1);
+            border-color: var(--ml-yellow);
+        }
+
+        .upload-area.active {
+            background: rgba(255, 208, 0, 0.2);
+            border-color: var(--ml-yellow);
+        }
+
+        .upload-area p {
+            color: var(--ml-purple);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .upload-area small {
+            color: #999;
+            font-size: 12px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .image-preview {
+            width: 100%;
+            max-height: 300px;
+            border-radius: 12px;
+            margin: 20px 0;
+            object-fit: contain;
+        }
+
+        .timer {
+            background: var(--error-red);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .timer.warning {
+            background: var(--warning-orange);
+        }
+
+        .timer.expired {
+            background: var(--error-red);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: var(--ml-yellow);
+            color: var(--ml-purple);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 208, 0, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--ml-purple);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(61, 38, 69, 0.3);
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--ml-purple);
+            font-weight: 600;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--ml-yellow);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .check-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-dark);
+        }
+
+        .check-item:last-child {
+            border-bottom: none;
+        }
+
+        .check-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .check-icon.success {
+            background: var(--success-green);
+        }
+
+        .check-icon.error {
+            background: var(--error-red);
+        }
+
+        .check-icon.loading {
+            background: var(--warning-orange);
+        }
+
+        .success-message {
+            background: var(--bg-light);
+            border-left: 4px solid var(--success-green);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .success-message h2 {
+            color: var(--success-green);
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        .error-message {
+            background: var(--bg-light);
+            border-left: 4px solid var(--error-red);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .error-message h2 {
+            color: var(--error-red);
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        .error-message p {
+            color: var(--text-dark);
+            font-size: 14px;
+            margin: 8px 0;
+        }
+
+        .coupon-code {
+            background: var(--ml-yellow);
+            color: var(--ml-purple);
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            margin: 20px 0;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .coupon-code:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(255, 208, 0, 0.3);
+        }
+
+        .copy-hint {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .platform-badge {
+            display: inline-block;
+            background: var(--ml-purple);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .content {
+                padding: 20px 15px;
+            }
+
+            .btn {
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .coupon-code {
+                font-size: 20px;
+                letter-spacing: 1px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎁 Mercado Livre</h1>
+            <p>Ganhe Cupom Exclusivo</p>
+        </div>
+
+        <div class="content">
+            <div class="screen active" id="screenInstructions">
+                <div class="instructions">
+                    <h3>Como Ganhar Seu Cupom?</h3>
+                    <ol>
+                        <li>Clique no botão abaixo</li>
+                        <li>Selecione uma captura de tela recente (até 5 minutos)</li>
+                        <li>O ícone do Mercado Livre deve estar visível na barra inferior</li>
+                        <li>Ganhe seu cupom de desconto!</li>
+                    </ol>
+                </div>
+                <button class="btn btn-primary" onclick="goToUpload()">
+                    📸 Upload Captura de Tela
+                </button>
+            </div>
+
+            <div class="screen" id="screenUpload">
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                    <p>Clique ou arraste a imagem aqui</p>
+                    <small>PNG, JPG - até 10MB</small>
+                </div>
+                <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+
+                <div id="previewContainer" style="display: none;">
+                    <img id="preview" class="image-preview">
+                    <div class="timer" id="timer">60</div>
+                    <button class="btn btn-primary" onclick="analyzeImage()">
+                        🔍 Analisar Imagem
+                    </button>
+                    <button class="btn btn-secondary" onclick="goToInstructions()">
+                        ← Voltar
+                    </button>
+                </div>
+            </div>
+
+            <div class="screen" id="screenAnalyzing">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>Analisando...</span>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <div class="check-item">
+                        <div class="check-icon loading">⏳</div>
+                        <span>Validando arquivo</span>
+                    </div>
+                    <div class="check-item">
+                        <div class="check-icon loading">⏳</div>
+                        <span>Detectando plataforma</span>
+                    </div>
+                    <div class="check-item">
+                        <div class="check-icon loading">⏳</div>
+                        <span>Procurando ícone</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen" id="screenSuccess">
+                <div class="success-message">
+                    <h2>✓ Parabéns!</h2>
+                    <p>Ícone detectado com sucesso</p>
+                    <div class="platform-badge" id="platformBadge">iOS</div>
+                </div>
+
+                <p style="text-align: center; color: var(--text-dark); margin: 20px 0;">
+                    Seu cupom exclusivo:
+                </p>
+
+                <div class="coupon-code" onclick="copyCoupon()">
+                    DESCONTOHOME15
+                </div>
+                <p class="copy-hint">Clique para copiar</p>
+
+                <button class="btn btn-primary" onclick="goToInstructions()">
+                    🎉 Ganhar Outro Cupom
+                </button>
+            </div>
+
+            <div class="screen" id="screenError">
+                <div class="error-message">
+                    <h2>✗ Falha na Validação</h2>
+                    <p id="errorReason">Erro ao validar</p>
+                </div>
+
+                <button class="btn btn-secondary" onclick="goToInstructions()">
+                    ← Tentar Novamente
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFile = null;
+        let timerInterval = null;
+        let timeRemaining = 60;
+
+        function goToScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function goToInstructions() {
+            stopTimer();
+            currentFile = null;
+            goToScreen('screenInstructions');
+        }
+
+        function goToUpload() {
+            timeRemaining = 60;
+            goToScreen('screenUpload');
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            currentFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('preview').src = e.target.result;
+                document.getElementById('previewContainer').style.display = 'block';
+                startTimer();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function startTimer() {
+            stopTimer();
+            timeRemaining = 60;
+            updateTimer();
+
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimer();
+
+                if (timeRemaining <= 0) {
+                    stopTimer();
+                    showError('Tempo expirado. Por favor, tente novamente.');
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function updateTimer() {
+            const timerEl = document.getElementById('timer');
+            timerEl.textContent = timeRemaining;
+
+            if (timeRemaining <= 10) {
+                timerEl.classList.add('warning');
+            } else {
+                timerEl.classList.remove('warning');
+            }
+
+            if (timeRemaining <= 0) {
+                timerEl.classList.add('expired');
+            }
+        }
+
+        function analyzeImage() {
+            if (!currentFile) return;
+
+            stopTimer();
+
+            const fileAge = (Date.now() - currentFile.lastModified) / 1000;
+            if (fileAge > 300) {
+                showError('Screenshot muito antiga - arquivo de mais de 5 minutos atrás.');
+                return;
+            }
+
+            goToScreen('screenAnalyzing');
+
+            setTimeout(() => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        detectPlatformAndIcon(img);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(currentFile);
+            }, 1500);
+        }
+
+        function detectPlatformAndIcon(img) {
+            const width = img.width;
+            const height = img.height;
+            const ratio = width / height;
+
+            let platform = 'iOS';
+            let dockAreaHeight = 100;
+            
+            if (Math.abs(ratio - 0.45) < 0.05) {
+                platform = 'iOS';
+                dockAreaHeight = 100;
+            } else {
+                platform = 'Android';
+                dockAreaHeight = 140;
+            }
+
+            setTimeout(() => {
+                const hasIcon = detectMercadoLivreIcon(img, platform, dockAreaHeight);
+
+                if (hasIcon) {
+                    document.getElementById('platformBadge').textContent = 
+                        platform === 'iOS' ? '🍎 iPhone' : '🤖 Android';
+                    goToScreen('screenSuccess');
+                } else {
+                    const message = platform === 'iOS' 
+                        ? 'Ícone Mercado Livre não detectado na barra inferior do iPhone.'
+                        : 'Ícone Mercado Livre não detectado na barra de favoritos do Android.';
+                    showError(message);
+                }
+            }, 1000);
+        }
+
+        function detectMercadoLivreIcon(img, platform, dockAreaHeight) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            const dockStartY = Math.max(0, img.height - dockAreaHeight);
+            const dockData = ctx.getImageData(0, dockStartY, img.width, dockAreaHeight);
+            
+            // Converter para grayscale
+            const gray = toGrayscale(dockData);
+            
+            // Edge detection (Sobel)
+            const edges = sobelEdgeDetection(gray, img.width, dockAreaHeight);
+            
+            // Detectar formas de ícone
+            const hasIconShape = detectIconShapes(edges, img.width, dockAreaHeight);
+            
+            return hasIconShape;
+        }
+
+        function toGrayscale(imageData) {
+            const data = imageData.data;
+            const gray = new Uint8Array(imageData.width * imageData.height);
+            
+            for (let i = 0, j = 0; i < data.length; i += 4, j++) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                gray[j] = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+            }
+            
+            return gray;
+        }
+
+        function sobelEdgeDetection(gray, width, height) {
+            const edges = new Uint8Array(width * height);
+            
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    let gx = 0, gy = 0;
+                    
+                    // Sobel X
+                    gx = -1 * gray[(y-1)*width+(x-1)] + 1 * gray[(y-1)*width+(x+1)];
+                    gx += -2 * gray[y*width+(x-1)] + 2 * gray[y*width+(x+1)];
+                    gx += -1 * gray[(y+1)*width+(x-1)] + 1 * gray[(y+1)*width+(x+1)];
+                    
+                    // Sobel Y
+                    gy = -1 * gray[(y-1)*width+(x-1)] + -2 * gray[(y-1)*width+x] + -1 * gray[(y-1)*width+(x+1)];
+                    gy += 1 * gray[(y+1)*width+(x-1)] + 2 * gray[(y+1)*width+x] + 1 * gray[(y+1)*width+(x+1)];
+                    
+                    const magnitude = Math.sqrt(gx * gx + gy * gy);
+                    edges[y * width + x] = Math.min(255, magnitude);
+                }
+            }
+            
+            return edges;
+        }
+
+        function detectIconShapes(edges, width, height) {
+            const threshold = 40;
+            const visited = new Uint8Array(width * height);
+            let iconsFound = 0;
+            
+            for (let i = 0; i < edges.length; i++) {
+                if (edges[i] > threshold && !visited[i]) {
+                    const blob = floodFillBlob(edges, visited, i, width, threshold);
+                    
+                    if (isValidIconSize(blob, width)) {
+                        iconsFound++;
+                    }
+                }
+            }
+            
+            return iconsFound > 0;
+        }
+
+        function floodFillBlob(edges, visited, startIdx, width, threshold) {
+            const blob = [];
+            const stack = [startIdx];
+            
+            while (stack.length > 0) {
+                const idx = stack.pop();
+                if (visited[idx] || edges[idx] < threshold) continue;
+                
+                visited[idx] = 1;
+                blob.push(idx);
+                
+                if (blob.length > 5000) break; // Limite de segurança
+                
+                const neighbors = [idx - 1, idx + 1, idx - width, idx + width];
+                neighbors.forEach(n => {
+                    if (n >= 0 && n < edges.length && !visited[n]) {
+                        stack.push(n);
+                    }
+                });
+            }
+            
+            return blob;
+        }
+
+        function isValidIconSize(blob, width) {
+            if (blob.length < 40) return false;
+            if (blob.length > width * 50) return false;
+            
+            // Ícone típico: 35-85 pixels
+            return true;
+        }
+
+        function showError(message) {
+            document.getElementById('errorReason').textContent = message;
+            goToScreen('screenError');
+        }
+
+        function copyCoupon() {
+            navigator.clipboard.writeText('DESCONTOHOME15').then(() => {
+                alert('✓ Cupom copiado!');
+            }).catch(() => {
+                alert('DESCONTOHOME15');
+            });
+        }
+
+        const uploadArea = document.getElementById('uploadArea');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('active');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('active');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('active');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                handleFileSelect({ target: { files } });
+            }
+        });
+    </script>
+</body>
+</html>
